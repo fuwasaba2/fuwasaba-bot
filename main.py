@@ -5,11 +5,8 @@ import os
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions
 from time import sleep
-import aiohttp
 import json
 import configparser
-from discord.ext import tasks
-import asyncio
 import random
 import string
 from dotenv import load_dotenv
