@@ -115,7 +115,9 @@ async def ana_t(ctx):
 async def on_message(message: discord.Message):
     user_id = message.author.id
     user = message.author
+
     owner_role = message.guild.get_role(1237718104918982666)
+    admin_role = message.guild.get_role(1251440959615664128)
 
     if owner_role in user.roles:
         if user_id in user_dict and not message.author.bot:
@@ -157,7 +159,7 @@ async def on_message(message: discord.Message):
                     await message.channel.send(embed=embed)
                     await message.delete()
                     user_dict.pop(user_id)
-    else:
+    elif admin_role in user.roles:
         if user_id in user_dict and not message.author.bot:
 
             embed = discord.Embed(description=message.content, color=0x9b59b6)
