@@ -114,46 +114,89 @@ async def ana_t(ctx):
 @bot.event
 async def on_message(message: discord.Message):
     user_id = message.author.id
+    user = message.author
+    owner_role = message.guild.get_role(1237718104918982666)
 
-    if user_id in user_dict and not message.author.bot:
+    if owner_role in user.roles:
+        if user_id in user_dict and not message.author.bot:
 
-        embed = discord.Embed(description=message.content, color=0x9b59b6)
-        embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
-        embed.set_footer(text=message.author.id)
+            embed = discord.Embed(description=message.content, color=0xe91e62)
+            embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
+            embed.set_footer(text=message.author.id)
 
-        if message.attachments:
-            for attachment in message.attachments:
-                if attachment.content_type.startswith("image/"):
-                    embed.set_image(url=attachment.url)
-                    break
+            if message.attachments:
+                for attachment in message.attachments:
+                    if attachment.content_type.startswith("image/"):
+                        embed.set_image(url=attachment.url)
+                        break
 
-        mentions = [mention.mention for mention in message.mentions]
-        role_mentions = [role.mention for role in message.role_mentions]
-        if message.mention_everyone:
-            mentions.append("@everyone")
-        mention_text = " ".join(mentions + role_mentions)
+            mentions = [mention.mention for mention in message.mentions]
+            role_mentions = [role.mention for role in message.role_mentions]
+            if message.mention_everyone:
+                mentions.append("@everyone")
+            mention_text = " ".join(mentions + role_mentions)
 
-        if message.reference:
-            replied_message = await message.channel.fetch_message(message.reference.message_id)
+            if message.reference:
+                replied_message = await message.channel.fetch_message(message.reference.message_id)
 
-            if mention_text:
-                await replied_message.reply(content=mention_text, embed=embed)
-                await message.delete()
-                user_dict.pop(user_id)
+                if mention_text:
+                    await replied_message.reply(content=mention_text, embed=embed)
+                    await message.delete()
+                    user_dict.pop(user_id)
+                else:
+                    await replied_message.reply(embed=embed)
+                    await message.delete()
+                    user_dict.pop(user_id)
+
             else:
-                await replied_message.reply(embed=embed)
-                await message.delete()
-                user_dict.pop(user_id)
+                if mention_text:
+                    await message.channel.send(content=mention_text, embed=embed)
+                    await message.delete()
+                    user_dict.pop(user_id)
+                else:
+                    await message.channel.send(embed=embed)
+                    await message.delete()
+                    user_dict.pop(user_id)
+    else:
+        if user_id in user_dict and not message.author.bot:
 
-        else:
-            if mention_text:
-                await message.channel.send(content=mention_text, embed=embed)
-                await message.delete()
-                user_dict.pop(user_id)
+            embed = discord.Embed(description=message.content, color=0x9b59b6)
+            embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
+            embed.set_footer(text=message.author.id)
+
+            if message.attachments:
+                for attachment in message.attachments:
+                    if attachment.content_type.startswith("image/"):
+                        embed.set_image(url=attachment.url)
+                        break
+
+            mentions = [mention.mention for mention in message.mentions]
+            role_mentions = [role.mention for role in message.role_mentions]
+            if message.mention_everyone:
+                mentions.append("@everyone")
+            mention_text = " ".join(mentions + role_mentions)
+
+            if message.reference:
+                replied_message = await message.channel.fetch_message(message.reference.message_id)
+
+                if mention_text:
+                    await replied_message.reply(content=mention_text, embed=embed)
+                    await message.delete()
+                    user_dict.pop(user_id)
+                else:
+                    await replied_message.reply(embed=embed)
+                    await message.delete()
+                    user_dict.pop(user_id)
+
             else:
-                await message.channel.send(embed=embed)
-                await message.delete()
-                user_dict.pop(user_id)
+                if mention_text:
+                    await message.channel.send(content=mention_text, embed=embed)
+                    await message.delete()
+                    user_dict.pop(user_id)
+                else:
+                    await message.channel.send(embed=embed)
+                    await message.delete()
+                    user_dict.pop(user_id)
 
 
 
