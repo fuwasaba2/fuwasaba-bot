@@ -68,7 +68,7 @@ class editModal(discord.ui.Modal):
         await message.edit(embed=embed)
         await interaction.response.send_message("編集しました。", ephemeral=True)
 
-@bot.message_command(name="edit", guild_ids=GUILD_IDS)
+@bot.message_command(name="edit")
 @commands.has_permissions(administrator=True)
 async def edit(ctx, message: discord.Message):
 
@@ -99,7 +99,7 @@ async def editerror(ctx, error):
 
 user_dict = {}
 
-@bot.slash_command(name="announce", description="メッセージを埋め込みにして送信します。", guild_ids=GUILD_IDS)
+@bot.slash_command(name="announce", description="メッセージを埋め込みにして送信します。")
 @commands.has_permissions(administrator=True)
 async def ana_t(ctx):
     user_id = ctx.author.id
@@ -199,6 +199,8 @@ async def on_message(message: discord.Message):
                     await message.channel.send(embed=embed)
                     await message.delete()
                     user_dict.pop(user_id)
+    else:
+        return
 
 
 
