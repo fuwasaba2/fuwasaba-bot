@@ -52,51 +52,6 @@ def save_blacklist_data(data):
 
 
 
-class editModal(discord.ui.Modal):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.add_item(discord.ui.InputText(label="内容を入力してください。", style=discord.InputTextStyle.long))
-
-    async def callback(self, interaction: discord.Interaction):
-
-        embed = discord.Embed(description=f"{self.children[0].value}", color=0xf1c40f)
-        embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
-        embed.add_field(name="", value="")
-
-        message = e_message
-        await message.edit(embed=embed)
-        await interaction.response.send_message("編集しました。", ephemeral=True)
-
-@bot.message_command(name="edit")
-@commands.has_permissions(administrator=True)
-async def edit(ctx, message: discord.Message):
-
-    if message.embeds:
-        embed = message.embeds[0]
-
-        if embed.footer.text == ctx.user.id:
-
-            global e_message
-            e_message = message
-
-            modal = editModal(title="editコマンド")
-            await ctx.send_modal(modal)
-        else:
-            await ctx.respond("他人が送信した埋め込みは編集できません。", ephemeral=True)
-    else:
-        await ctx.respond("埋め込みがありません。", ephemeral=True)
-
-@edit.error
-async def editerror(ctx, error):
-    if isinstance(error, MissingPermissions):
-        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
-    else:
-        await ctx.respond("Something went wrong...", ephemeral=True)
-        raise error
-
-
-
 user_dict = {}
 
 @bot.slash_command(name="announce", description="メッセージを埋め込みにして送信します。")
@@ -219,7 +174,6 @@ cogs_list = [
     'userinfo',
     'serverinfo',
     'mcstatus',
-    'dm',
     'ban',
     'kick',
     'tasks',
