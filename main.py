@@ -19,6 +19,10 @@ config_ini = configparser.ConfigParser()
 config_ini.read("config.ini", encoding="utf-8")
 TOKEN = config_ini["MAIN"]["TOKEN"]
 
+owner_role = int(config_ini["ROLE"]["OWNER"])
+admin_role = int(config_ini["ROLE"]["ADMIN"])
+dev_role = int(config_ini["ROLE"]["DEVELOPER"])
+
 bot = discord.Bot(intents=intents)
 bot.webhooks = {}
 GUILD_IDS = [1235247721934360577]
@@ -55,7 +59,7 @@ def save_blacklist_data(data):
 user_dict = {}
 
 @bot.slash_command(name="announce", description="メッセージを埋め込みにして送信します。")
-@commands.has_permissions(administrator=True)
+@commands.has_any_role(1282384396791320665, 1282384396791320666, 1282384396791320664)
 async def ana_t(ctx):
     user_id = ctx.author.id
 
@@ -70,9 +74,6 @@ async def ana_t(ctx):
 async def on_message(message: discord.Message):
     user_id = message.author.id
     user = message.author
-
-    owner_role = message.guild.get_role(1237718104918982666)
-    admin_role = message.guild.get_role(1251440959615664128)
 
     if owner_role in user.roles:
         if user_id in user_dict and not message.author.bot:
@@ -114,7 +115,7 @@ async def on_message(message: discord.Message):
                     await message.channel.send(embed=embed)
                     await message.delete()
                     user_dict.pop(user_id)
-    elif admin_role in user.roles:
+    else:
         if user_id in user_dict and not message.author.bot:
 
             embed = discord.Embed(description=message.content, color=0x9b59b6)
@@ -154,8 +155,6 @@ async def on_message(message: discord.Message):
                     await message.channel.send(embed=embed)
                     await message.delete()
                     user_dict.pop(user_id)
-    else:
-        return
 
 
 
@@ -169,16 +168,17 @@ def stop_py():
 
 #cogs登録
 cogs_list = [
-    'clear',
-    'ping',
-    'userinfo',
-    'serverinfo',
-    'mcstatus',
     'ban',
-    'kick',
-    'tasks',
     'blacklist',
-    'stop'
+    'clear',
+    'country',
+    'kick',
+    'mcstatus',
+    'ping',
+    'serverinfo',
+    'stop',
+    'tasks',
+    'userinfo',
 ]
 
 for cog in cogs_list:

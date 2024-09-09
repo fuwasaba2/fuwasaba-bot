@@ -20,7 +20,7 @@ class mcstatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @discord.slash_command(name="mcstatus", description="マイクラサーバーのステータスを確認します。")
+    @discord.slash_command(name="mcstatus", description="ふわ鯖のサーバーステータスを確認します。")
     async def mcstatus(self, ctx):
         user_id = str(ctx.author.id)
 
