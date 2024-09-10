@@ -9,6 +9,7 @@ import configparser
 import aiofiles
 import os
 from discord.ext.pages import Paginator, Page
+from discord.utils import get
 
 
 
@@ -93,6 +94,9 @@ class permissionView(discord.ui.View):
         user_id = int(ruler.id)
         save_user(country, user_id)
 
+        role = await interaction.guild.create_role(name=country, mentionable=True)
+        await ruler.add_roles(role)
+
         await interaction.response.send_message("建国が承認されました。")
 
         embed = discord.Embed(title="建国されました", color=0x4169e1)
@@ -126,6 +130,9 @@ class joinView(discord.ui.View):
 
         await add_employee(country_id, employee_id)
 
+        role = get(interaction.guild.roles, name=join_c)
+        await join_u.add_roles(role)
+
         await interaction.response.send_message(f"{join_u.display_name}の国家への加入を承認しました。")
 
         embed = discord.Embed(title="国家加入", description="以下の内容で国家への加入が行われました。", color=0x4169e1)
@@ -137,7 +144,6 @@ class joinView(discord.ui.View):
 
     @discord.ui.button(label="却下", custom_id="kick-button", style=discord.ButtonStyle.red)
     async def rejection(self, button: discord.ui.Button, interaction: discord.Interaction):
-
         await interaction.response.send_message("加入を却下しました。")
 
         applicant_dm = await self.bot.fetch_user(f"{join_u.id}")
@@ -200,7 +206,7 @@ class country(commands.Cog):
     @country.command(name="request", description="指定した国家に加入申請を行います。", guild_ids=GUILD_IDS)
     async def request(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="加入したい国家の名称を入力してください。")):
 
-        global join_c, join_u
+        global join_c, join_u, ruler_id
         join_c = name
         join_u = ctx.author
 
@@ -212,7 +218,7 @@ class country(commands.Cog):
         embed.set_thumbnail(url=ctx.author.display_avatar.url)
 
         View = joinView(self.bot)
-        ruler_dm = await self.bot.fetch_user(ruler_id[1])
+        ruler_dm = await self.bot.fetch_channel(1282384397563068506)
         await ruler_dm.send(embed=embed, view=View)
 
         await ctx.respond(f"{name}への加入申請を行いました。\n国主が承認するまでお待ちください。\n \nなお、承認及び不承認の際にはBOTからのDMが届きます。\n必ずBOTからメッセージを受信できるようにしてください。")
