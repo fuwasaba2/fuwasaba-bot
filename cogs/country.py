@@ -62,7 +62,7 @@ conn = sqlite3.connect('fuwasaba.db')
 c = conn.cursor()
 
 c.execute('''CREATE TABLE IF NOT EXISTS users
-             (id TEXT PRIMARY KEY, country TEXT )''')
+             (id TEXT PRIMARY KEY, country INTEGER )''')
 
 conn.commit()
 
@@ -89,6 +89,9 @@ class permissionView(discord.ui.View):
     async def permission(self, button: discord.ui.Button, interaction: discord.Interaction):
 
         await save_country_access(country_id, ruler.id, [])
+        country = str(country_id)
+        user_id = int(ruler.id)
+        save_user(country, user_id)
 
         await interaction.response.send_message("建国が承認されました。")
 
