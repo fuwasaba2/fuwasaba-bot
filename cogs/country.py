@@ -58,6 +58,27 @@ async def is_authorized_user(user_id, country_id):
 
 
 
+conn = sqlite3.connect('fuwasaba.db')
+c = conn.cursor()
+
+c.execute('''CREATE TABLE IF NOT EXISTS users
+             (id TEXT PRIMARY KEY, country TEXT )''')
+
+conn.commit()
+
+
+
+def save_user(user_id, country):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO users (id, country) VALUES (?, ?)", (user_id, country))
+        c.execute("UPDATE users SET country = ? WHERE id = ?", (country, user_id))
+
+def get_user_info(user_id):
+    c.execute("SELECT id, country FROM users WHERE id = ?", (user_id,))
+    return c.fetchone()
+
+
+
 class permissionView(discord.ui.View):
 
     def __init__(self, bot):
@@ -138,6 +159,16 @@ class country(commands.Cog):
         paginator = Paginator(pages=country_pages)
         await paginator.respond(ctx.interaction, ephemeral=True)
 
+
+
+    @country.command(name="request", description="指定した国家に加入申請を行います。", guild_ids=GUILD_IDS)
+    async def request(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="加入したい国家の名称を入力してください。")):
+
+        embed = discord.Embed(title="国家加入申請", description="以下の内容で入国申請が届きました。")
+        embed.add_field(name="入国希望者", value=ctx.author.mention, inline=False)
+        embed.set_thumbnail(url=ctx.author.display_avatar.url)
+
+        await ctx.respond(embed=embed)
 
 
 def setup(bot):

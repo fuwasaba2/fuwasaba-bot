@@ -10,6 +10,7 @@ import configparser
 import random
 import string
 from dotenv import load_dotenv
+import sqlite3
 
 
 intents = discord.Intents.default()
@@ -18,10 +19,6 @@ intents.message_content = (True)
 config_ini = configparser.ConfigParser()
 config_ini.read("config.ini", encoding="utf-8")
 TOKEN = config_ini["MAIN"]["TOKEN"]
-
-owner_role = config_ini["ROLE"]["OWNER"]
-admin_role = config_ini["ROLE"]["ADMIN"]
-dev_role = config_ini["ROLE"]["DEVELOPER"]
 
 bot = discord.Bot(intents=intents)
 bot.webhooks = {}
@@ -53,6 +50,28 @@ def load_blacklist_data():
 def save_blacklist_data(data):
     with open(blacklist_file, 'w') as file:
         json.dump(data, file, indent=4)
+
+
+
+#sqlite3
+conn = sqlite3.connect('fuwasaba.db')
+c = conn.cursor()
+
+c.execute('''CREATE TABLE IF NOT EXISTS users
+             (id TEXT PRIMARY KEY, country TEXT )''')
+
+conn.commit()
+
+
+
+def save_user(user_id, country):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO users (id, country) VALUES (?, ?)", (user_id, country))
+        c.execute("UPDATE users SET country = ? WHERE id = ?", (country, user_id))
+
+def get_user_info(user_id):
+    c.execute("SELECT id, country FROM users WHERE id = ?", (user_id,))
+    return c.fetchone()
 
 
 
