@@ -22,12 +22,12 @@ TOML_FILE = 'country.toml'
 async def load_country_data():
     if not os.path.exists(TOML_FILE):
         return {}
-    async with aiofiles.open(TOML_FILE, 'r') as file:
+    async with aiofiles.open(TOML_FILE, 'r', encoding='utf-8') as file:
         contents = await file.read()
         return toml.loads(contents).get('countrys', {})
 
 async def save_country_data(data):
-    async with aiofiles.open(TOML_FILE, 'w') as file:
+    async with aiofiles.open(TOML_FILE, 'w', encoding='utf-8') as file:
         await file.write(toml.dumps({'countrys': data}))
 
 async def save_country_access(country_id, Ruler, employees):
@@ -172,24 +172,21 @@ class country(commands.Cog):
     async def all(self, interaction: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。"), flag: discord.Attachment):
 
         country_name = get_user_info(name)
-        if country_name:
-            embed = discord.Embed(title="建国申請", color=0x4169e1)
-            embed.add_field(name="国名", value=name, inline=False)
-            embed.add_field(name="国主", value=interaction.author.mention, inline=False)
-            embed.set_image(url=flag.url)
+        embed = discord.Embed(title="建国申請", color=0x4169e1)
+        embed.add_field(name="国名", value=name, inline=False)
+        embed.add_field(name="国主", value=interaction.author.mention, inline=False)
+        embed.set_image(url=flag.url)
 
-            global ruler, country_id, flag_url
-            ruler = interaction.author
-            country_id = str(name)
-            flag_url = flag.url
+        global ruler, country_id, flag_url
+        ruler = interaction.author
+        country_id = str(name)
+        flag_url = flag.url
 
-            await interaction.respond(embed=embed, ephemeral=True)
+        await interaction.respond(embed=embed, ephemeral=True)
 
-            View = permissionView(self.bot)
-            request_c = await self.bot.fetch_channel("1282716891378356225")
-            await request_c.send(embed=embed, view=View)
-        else:
-            await interaction.response.send_message("指定した国名の国がすでに存在しています。", ephemeral=True)
+        View = permissionView(self.bot)
+        request_c = await self.bot.fetch_channel("1282716891378356225")
+        await request_c.send(embed=embed, view=View)
 
 
 
