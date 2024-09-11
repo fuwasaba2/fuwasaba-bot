@@ -57,22 +57,39 @@ def save_blacklist_data(data):
 conn = sqlite3.connect('fuwasaba.db')
 c = conn.cursor()
 
-c.execute('''CREATE TABLE IF NOT EXISTS users
-             (id TEXT PRIMARY KEY, country TEXT )''')
+c.execute('''CREATE TABLE IF NOT EXISTS register
+             (id TEXT PRIMARY KEY, mcid TEXT )''')
 
 conn.commit()
 
 
 
-def save_user(user_id, country):
+def save_mcid(user_id, mcid):
     with conn:
-        c.execute("INSERT OR IGNORE INTO users (id, country) VALUES (?, ?)", (user_id, country))
-        c.execute("UPDATE users SET country = ? WHERE id = ?", (country, user_id))
+        c.execute("INSERT OR IGNORE INTO register (id, mcid) VALUES (?, ?)", (user_id, mcid))
+        c.execute("UPDATE register SET mcid = ? WHERE id = ?", (mcid, user_id))
 
-def get_user_info(user_id):
-    c.execute("SELECT id, country FROM users WHERE id = ?", (user_id,))
+def get_mcid_info(user_id):
+    c.execute("SELECT id, mcid FROM register WHERE id = ?", (user_id,))
     return c.fetchone()
 
+
+
+@bot.slash_command(name="register", description="MCIDを登録します。", guild_ids=GUILD_IDS)
+async def register(ctx:discord.ApplicationContext, id: discord.Option(str, description="mcidを入力してください。")):
+
+    user_id = str(ctx.author.id)
+    mcid = str(id)
+    save_mcid(user_id, mcid)
+
+    await ctx.respond(f"{id}を登録しました。", ephemeral=True)
+
+@bot.slash_command(name="user_info", description="MCIDを表示します。", guild_id=GUILD_IDS)
+async def info(ctx: discord.ApplicationContext, user: discord.Member):
+
+    user_info = get_mcid_info(user.id)
+
+    await ctx.respond(f"あなたのmcidは{user_info[1]}です。", ephemeral=True)
 
 
 user_dict = {}
@@ -85,10 +102,10 @@ async def ana_t(ctx):
 
     if user_id in owner_dict:
         owner_dict.pop(user_id)
-        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードが終了しました。", ephemeral=True)
+        await ctx.respond("アナウンスモードが終了しました。", ephemeral=True)
     else:
         owner_dict[user_id] = ctx.author.name
-        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードを起動しました", ephemeral=True)
+        await ctx.respond("アナウンスモードを起動しました。", ephemeral=True)
 
 
 
@@ -99,10 +116,10 @@ async def ana_t(ctx):
 
     if user_id in user_dict:
         user_dict.pop(user_id)
-        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードが終了しました。", ephemeral=True)
+        await ctx.respond("アナウンスモードが終了しました。", ephemeral=True)
     else:
         user_dict[user_id] = ctx.author.name
-        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードを起動しました", ephemeral=True)
+        await ctx.respond("アナウンスモードを起動しました。", ephemeral=True)
 
 
 
