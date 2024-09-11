@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-from discord.ext.commands import MissingAnyRole
 import json
 import toml
 import sqlite3
@@ -100,6 +99,7 @@ class permissionView(discord.ui.View):
         await interaction.response.send_message("建国が承認されました。")
 
         embed = discord.Embed(title="建国されました", color=0x4169e1)
+        embed.add_field(name="国名", value=country_id)
         embed.add_field(name="国主", value=ruler.mention, inline=False)
         embed.set_image(url=flag_url)
 
@@ -163,6 +163,7 @@ class country(commands.Cog):
 
         embed = discord.Embed(title="建国申請", color=0x4169e1)
         embed.add_field(name="国名", value=name, inline=False)
+        embed.add_field(name="国主", value=interaction.author.mention, inline=False)
         embed.set_image(url=flag.url)
 
         global ruler, country_id, flag_url
