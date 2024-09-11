@@ -1,18 +1,35 @@
 import discord
 from discord.ext import commands
-import json
+import sqlite3
+import configparser
 
-Debug_guild = [1235247721934360577]
+config_ini = configparser.ConfigParser()
+config_ini.read("config.ini", encoding="utf-8")
+GUILD_IDS = config_ini["MAIN"]["GUILD"]
 
-blacklist_file = 'blacklist.json'
 
-def load_data():
-    with open(blacklist_file, 'r') as file:
-        return json.load(file)
 
-def save_data(data):
-    with open(blacklist_file, 'w') as file:
-        json.dump(data, file, indent=4)
+#sqlite3
+conn = sqlite3.connect('fuwasaba.db')
+c = conn.cursor()
+
+c.execute('''CREATE TABLE IF NOT EXISTS register
+             (id TEXT PRIMARY KEY, mcid TEXT )''')
+
+conn.commit()
+
+
+
+def save_mcid(user_id, mcid):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO register (id, mcid) VALUES (?, ?)", (user_id, mcid))
+        c.execute("UPDATE register SET mcid = ? WHERE id = ?", (mcid, user_id))
+
+def get_mcid_info(user_id):
+    c.execute("SELECT id, mcid FROM register WHERE id = ?", (user_id,))
+    return c.fetchone()
+
+
 
 class userinfo(commands.Cog):
 
@@ -21,23 +38,21 @@ class userinfo(commands.Cog):
 
     @discord.slash_command(name="userinfo", description="ユーザー情報を取得します。")
     async def userinfo(self, ctx, user:discord.Member):
-        user_id = str(ctx.author.id)
+        user_id = str(user.id)
+        mcid = get_mcid_info(user_id)
 
-        data = load_data()
-        if user_id not in data:
-            try:
-                embed = discord.Embed(title="User Info", description=f" <@!{user}>", color=0x4169e1)
-                embed.set_thumbnail(url=user.avatar.url)
-            except:
-                pass
-            embed.add_field(name="表示名", value=user.display_name,inline=True)
-            embed.add_field(name="ユーザーID", value=user.id,inline=True)
-            embed.add_field(name="メンション", value=user.mention, inline=True)
-            embed.add_field(name="アカウント作成日", value=user.created_at)
-            embed.set_footer(text="Userinfoサービス")
-            await ctx.respond(embed=embed, ephemeral=True)
-        else:
-            await ctx.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
+        try:
+            embed = discord.Embed(title="User Info", description=f" <@!{user}>", color=0x4169e1)
+            embed.set_thumbnail(url=user.avatar.url)
+        except:
+            pass
+        embed.add_field(name="表示名", value=user.display_name,inline=True)
+        embed.add_field(name="ユーザーID", value=user.id,inline=True)
+        embed.add_field(name="メンション", value=user.mention, inline=True)
+        embed.add_field(name="アカウント作成日", value=user.created_at)
+        embed.add_field(name="MCID", value=mcid[1], inline=False)
+        embed.set_footer(text="Userinfoサービス")
+        await ctx.respond(embed=embed, ephemeral=True)
 
 class userinfo_c(commands.Cog):
 
@@ -46,24 +61,22 @@ class userinfo_c(commands.Cog):
 
     @discord.user_command(name="userinfo")
     async def userinfo_c(self, ctx, user: discord.Member):
-        user_id = str(ctx.author.id)
 
-        data = load_data()
+        user_id = str(user.id)
+        mcid = get_mcid_info(user_id)
 
-        if user_id not in data:
-            try:
-                embed = discord.Embed(title="User Info", description=f" <@!{user}>", color=0x4169e1)
-                embed.set_thumbnail(url=user.avatar.url)
-            except:
-                pass
-            embed.add_field(name="表示名", value=user.display_name,inline=True)
-            embed.add_field(name="ユーザーID", value=user.id,inline=True)
-            embed.add_field(name="メンション", value=user.mention, inline=True)
-            embed.add_field(name="アカウント作成日", value=user.created_at)
-            embed.set_footer(text="Userinfoサービス")
-            await ctx.respond(embed=embed, ephemeral=True)
-        else:
-            await ctx.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
+        try:
+            embed = discord.Embed(title="User Info", description=f" <@!{user}>", color=0x4169e1)
+            embed.set_thumbnail(url=user.avatar.url)
+        except:
+            pass
+        embed.add_field(name="表示名", value=user.display_name,inline=True)
+        embed.add_field(name="ユーザーID", value=user.id,inline=True)
+        embed.add_field(name="メンション", value=user.mention, inline=True)
+        embed.add_field(name="アカウント作成日", value=user.created_at)
+        embed.add_field(name="MCID", value=mcid[1], inline=False)
+        embed.set_footer(text="Userinfoサービス")
+        await ctx.respond(embed=embed, ephemeral=True)
 
 def setup(bot):
     bot.add_cog(userinfo(bot))
