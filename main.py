@@ -84,12 +84,6 @@ async def register(ctx:discord.ApplicationContext, id: discord.Option(str, descr
 
     await ctx.respond(f"{id}を登録しました。", ephemeral=True)
 
-@bot.slash_command(name="user_info", description="MCIDを表示します。", guild_id=GUILD_IDS)
-async def info(ctx: discord.ApplicationContext, user: discord.Member):
-
-    user_info = get_mcid_info(user.id)
-
-    await ctx.respond(f"あなたのmcidは{user_info[1]}です。", ephemeral=True)
 
 
 user_dict = {}

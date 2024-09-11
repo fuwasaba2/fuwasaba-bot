@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-import json
 import toml
 import sqlite3
 import configparser
@@ -58,6 +57,7 @@ async def is_authorized_user(user_id, country_id):
 
 
 
+#sqlite3
 conn = sqlite3.connect('fuwasaba.db')
 c = conn.cursor()
 
@@ -171,21 +171,25 @@ class country(commands.Cog):
     @country.command(name='create', description="建国を行います。", guild_ids=GUILD_IDS)
     async def all(self, interaction: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。"), flag: discord.Attachment):
 
-        embed = discord.Embed(title="建国申請", color=0x4169e1)
-        embed.add_field(name="国名", value=name, inline=False)
-        embed.add_field(name="国主", value=interaction.author.mention, inline=False)
-        embed.set_image(url=flag.url)
+        country_name = get_user_info(name)
+        if country_name:
+            embed = discord.Embed(title="建国申請", color=0x4169e1)
+            embed.add_field(name="国名", value=name, inline=False)
+            embed.add_field(name="国主", value=interaction.author.mention, inline=False)
+            embed.set_image(url=flag.url)
 
-        global ruler, country_id, flag_url
-        ruler = interaction.author
-        country_id = str(name)
-        flag_url = flag.url
+            global ruler, country_id, flag_url
+            ruler = interaction.author
+            country_id = str(name)
+            flag_url = flag.url
 
-        await interaction.respond(embed=embed, ephemeral=True)
+            await interaction.respond(embed=embed, ephemeral=True)
 
-        View = permissionView(self.bot)
-        request_c = await self.bot.fetch_channel("1282716891378356225")
-        await request_c.send(embed=embed, view=View)
+            View = permissionView(self.bot)
+            request_c = await self.bot.fetch_channel("1282716891378356225")
+            await request_c.send(embed=embed, view=View)
+        else:
+            await interaction.response.send_message("指定した国名の国がすでに存在しています。", ephemeral=True)
 
 
 
