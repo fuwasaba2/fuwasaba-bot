@@ -62,19 +62,19 @@ conn = sqlite3.connect('fuwasaba.db')
 c = conn.cursor()
 
 c.execute('''CREATE TABLE IF NOT EXISTS users
-             (id TEXT PRIMARY KEY, country INTEGER )''')
+             (country TEXT PRIMARY KEY, id INTEGER )''')
 
 conn.commit()
 
 
 
-def save_user(user_id, country):
+def save_user(country, user_id):
     with conn:
-        c.execute("INSERT OR IGNORE INTO users (id, country) VALUES (?, ?)", (user_id, country))
-        c.execute("UPDATE users SET country = ? WHERE id = ?", (country, user_id))
+        c.execute("INSERT OR IGNORE INTO users (country, id) VALUES (?, ?)", (country, user_id))
+        c.execute("UPDATE users SET id = ? WHERE country = ?", (user_id, country))
 
-def get_user_info(user_id):
-    c.execute("SELECT id, country FROM users WHERE id = ?", (user_id,))
+def get_user_info(country):
+    c.execute("SELECT country, id FROM users WHERE country = ?", (country,))
     return c.fetchone()
 
 
@@ -125,29 +125,39 @@ class joinView(discord.ui.View):
     @discord.ui.button(label="承認", custom_id="join-button", style=discord.ButtonStyle.green)
     async def permission(self, button: discord.ui.Button, interaction: discord.Interaction):
 
-        country_id = str(join_c)
-        employee_id = str(join_u.id)
+        country_name = get_user_info(join_c)
+        if str(country_name[1]) == str(interaction.user.id):
+            country_id = str(join_c)
+            employee_id = str(join_u.id)
 
-        await add_employee(country_id, employee_id)
+            await add_employee(country_id, employee_id)
 
-        role = get(interaction.guild.roles, name=join_c)
-        await join_u.add_roles(role)
+            role = get(interaction.guild.roles, name=join_c)
+            await join_u.add_roles(role)
 
-        await interaction.response.send_message(f"{join_u.display_name}の国家への加入を承認しました。")
+            await interaction.response.send_message(f"{join_u.display_name}の国家への加入を承認しました。")
 
-        embed = discord.Embed(title="国家加入", description="以下の内容で国家への加入が行われました。", color=0x4169e1)
-        embed.add_field(name="加入者", value=join_u.mention, inline=False)
-        embed.add_field(name="加入先", value=join_c, inline=False)
+            embed = discord.Embed(title="国家加入", description="以下の内容で国家への加入が行われました。", color=0x4169e1)
+            embed.add_field(name="加入者", value=join_u.mention, inline=False)
+            embed.add_field(name="加入先", value=join_c, inline=False)
 
-        approval_c = await self.bot.fetch_channel("1282384397563068506")
-        await approval_c.send(embed=embed)
+            approval_c = await self.bot.fetch_channel("1282384397563068506")
+            await approval_c.send(embed=embed)
+        else:
+            await interaction.response.send_message("あなたは国主ではありません。", ephemeral=True)
 
     @discord.ui.button(label="却下", custom_id="kick-button", style=discord.ButtonStyle.red)
     async def rejection(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await interaction.response.send_message("加入を却下しました。")
 
-        applicant_dm = await self.bot.fetch_user(f"{join_u.id}")
-        await applicant_dm.send("加入が却下されました。")
+        country_name = get_user_info(join_c)
+        if str(country_name[1]) == str(interaction.user.id):
+
+            await interaction.response.send_message("加入を却下しました。")
+
+            applicant_dm = await self.bot.fetch_user(f"{join_u.id}")
+            await applicant_dm.send("加入が却下されました。")
+        else:
+            await interaction.response.send_message("あなたは国主ではありません。", ephemeral=True)
 
 
 
