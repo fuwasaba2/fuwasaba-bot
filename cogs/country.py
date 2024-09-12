@@ -212,21 +212,24 @@ class country(commands.Cog):
     async def all(self, interaction: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。"), flag: discord.Attachment):
 
         country_name = get_user_info(name)
-        embed = discord.Embed(title="建国申請", color=0x4169e1)
-        embed.add_field(name="国名", value=name, inline=False)
-        embed.add_field(name="国主", value=interaction.author.mention, inline=False)
-        embed.set_image(url=flag.url)
+        if country_name:
+            await interaction.response.send_message("その国名を持つ国がすでに存在しています。", ephemeral=True)
+        else:
+            embed = discord.Embed(title="建国申請", color=0x4169e1)
+            embed.add_field(name="国名", value=name, inline=False)
+            embed.add_field(name="国主", value=interaction.author.mention, inline=False)
+            embed.set_image(url=flag.url)
 
-        global ruler, country_id, flag_url
-        ruler = interaction.author
-        country_id = str(name)
-        flag_url = flag.url
+            global ruler, country_id, flag_url
+            ruler = interaction.author
+            country_id = str(name)
+            flag_url = flag.url
 
-        await interaction.respond(embed=embed, ephemeral=True)
+            await interaction.respond(embed=embed, ephemeral=True)
 
-        View = permissionView(self.bot)
-        request_c = await self.bot.fetch_channel("1282716891378356225")
-        await request_c.send(embed=embed, view=View)
+            View = permissionView(self.bot)
+            request_c = await self.bot.fetch_channel("1282716891378356225")
+            await request_c.send(embed=embed, view=View)
 
 
 
@@ -245,10 +248,9 @@ class country(commands.Cog):
             embed.add_field(name=country_id, value=f"国主: <@{details['Ruler']}>", inline=False)
             count += 1
 
-            # 5社ごとにページを作成
             if count % 5 == 0 or count == len(countrys):
                 country_pages.append(Page(embeds=[embed]))
-                embed = discord.Embed(title="国家リスト", color=0x00ff00)  # 新しい埋め込みを作成
+                embed = discord.Embed(title="国家リスト", color=0x00ff00)
 
         paginator = Paginator(pages=country_pages)
         await paginator.respond(ctx.interaction, ephemeral=True)
