@@ -2,7 +2,7 @@ import discord
 import discord.ui
 from discord import option
 import os
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ext.commands import MissingPermissions
 from time import sleep
 import json
@@ -12,6 +12,7 @@ import string
 from dotenv import load_dotenv
 import sqlite3
 from datetime import datetime, timedelta, timezone
+import asyncio
 
 
 
@@ -40,6 +41,13 @@ async def on_ready():
     pass_channel = await bot.fetch_channel("1251824100515512432")
     await channel.send(f"{bot.user}BOT起動完了")
     await pass_channel.send(f"{result}")
+    while True:
+        await bot.change_presence(status=discord.Status.online, activity = discord.Activity(name="ふわ鯖", type=discord.ActivityType.playing))
+        await asyncio.sleep(15)
+        await bot.change_presence(status=discord.Status.online, activity = discord.Activity(name="mod建国サーバー", type=discord.ActivityType.playing))
+        await asyncio.sleep(15)
+        await bot.change_presence(status=discord.Status.online, activity = discord.Activity(name="Minecraft", type=discord.ActivityType.playing))
+        await asyncio.sleep(15)
 
 
 
