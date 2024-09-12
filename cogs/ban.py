@@ -26,7 +26,7 @@ class ban(commands.Cog):
         else:
             if reason == None:
                 reason = f"BAN理由:{ctx.author}"
-            await member.ban(reason = reason)
+            await member.ban(reason=f"実行者:{ctx.author.display_name}\n{reason}")
             await ctx.respond(f"<@{member.id}> がサーバーからBANされました。\n\nBAN理由: {reason}", ephemeral=True)
 
     @ban.error
