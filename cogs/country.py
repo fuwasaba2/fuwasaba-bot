@@ -161,6 +161,46 @@ class joinView(discord.ui.View):
 
 
 
+class deleteView(discord.ui.View):
+
+    def __init__(self, bot):
+        super().__init__(timeout=None)
+        self.bot = bot
+
+    @discord.ui.button(label="承認", custom_id="d-permission-button", style=discord.ButtonStyle.green)
+    async def permission(self, button: discord.ui.Button, interaction: discord.Interaction):
+
+        country_info2 = get_user_info(country_info)
+
+        country_id2 = str(country_info)
+        if country_info2:
+            c.execute(f"""DELETE FROM company WHERE id="{country_info}";""")
+            conn.commit()
+
+            countrys = await load_country_data()
+            if country_id2 in countrys:
+                del countrys[country_id2]
+                await save_country_data(countrys)
+
+        await interaction.response.send_message("解体が承認されました。")
+
+        embed = discord.Embed(title="解体されました", color=0x4169e1)
+        embed.add_field(name="国名", value=country_id2)
+        embed.add_field(name="国主", value=country_r.mention, inline=False)
+
+        approval_c = await self.bot.fetch_channel("1282384397563068505")
+        await approval_c.send(embed=embed)
+
+    @discord.ui.button(label="却下", custom_id="d-rejection-button", style=discord.ButtonStyle.red)
+    async def rejection(self, button: discord.ui.Button, interaction: discord.Interaction):
+
+        await interaction.response.send_message("解体を却下しました。")
+
+        ruler_dm = await self.bot.fetch_user(f"{ruler.id}")
+        await ruler_dm.send("解体が却下されました。")
+
+
+
 class country(commands.Cog):
 
     def __init__(self, bot):
@@ -235,6 +275,34 @@ class country(commands.Cog):
 
         await ctx.respond(f"{name}への加入申請を行いました。\n国主が承認するまでお待ちください。\n \nなお、承認及び不承認の際にはBOTからのDMが届きます。\n必ずBOTからメッセージを受信できるようにしてください。")
 
+
+
+    @country.command(name='delete', description="国家の解体を行います。", guild_ids=GUILD_IDS)
+    async def all(self, interaction: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。")):
+
+        global country_info, country_r
+
+        country_info = str(name)
+
+        country_r = interaction.author
+
+        c_name = get_user_info(name)
+
+        if str(c_name[1]) == str(country_r.id):
+
+            embed = discord.Embed(title="解体申請", description="以下の内容で国家の解体申請を受け付けました。", color=0x4169e1)
+            embed.add_field(name="国名", value=name, inline=False)
+            embed.add_field(name="国主", value=interaction.author.mention, inline=False)
+
+            ruler = interaction.author
+
+            await interaction.respond(embed=embed, ephemeral=True)
+
+            View = deleteView(self.bot)
+            request_c = await self.bot.fetch_channel("1283638915453947985")
+            await request_c.send(embed=embed, view=View)
+        else:
+            await interaction.response.send_message("あなたは国主ではありません。", ephemeral=True)
 
 
 def setup(bot):
