@@ -189,6 +189,47 @@ async def on_message(message: discord.Message):
 
 
 
+class authModal(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="MCIDを入力してください。", style=discord.InputTextStyle.short))
+
+    async def callback(self, interaction: discord.Interaction):
+
+        role = interaction.guild.get_role(1282384396757893175)
+
+        user_id = str(interaction.user.id)
+        mcid = str(self.children[0].value)
+        save_mcid(user_id, mcid)
+
+        embed = discord.Embed(title="認証成功", description="認証に成功しました。\nふわ鯖へようこそ", color=0x00ff00)
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.user.add_roles(role)
+
+class authView(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="認証", custom_id="auth-button", style=discord.ButtonStyle.primary)
+    async def auth(self, button: discord.ui.Button, interaction):
+
+        modal = authModal(title="mcidを入力してください")
+        await interaction.response.send_modal(modal)
+
+@bot.slash_command(name="auth", description="認証用パネルを設置します。", guild_ids=GUILD_IDS)
+@commands.has_any_role(1282384396791320664, 1282384396791320665)
+async def auth(ctx: discord.ApplicationContext):
+    embed = discord.Embed(title="認証パネル", description="下のボタンを押して認証を開始してください。")
+
+    await ctx.respond("認証用パネルを設置しました。", ephemeral=True)
+    await ctx.send(embed=embed, view=authView())
+
+
+
+#削除メッセージ保存
 @bot.event
 async def on_message_delete(message: discord.Message):
 
