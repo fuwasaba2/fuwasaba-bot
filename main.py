@@ -41,18 +41,6 @@ async def on_ready():
 
 
 
-blacklist_file = 'blacklist.json'
-
-def load_blacklist_data():
-    with open(blacklist_file, 'r') as file:
-        return json.load(file)
-
-def save_blacklist_data(data):
-    with open(blacklist_file, 'w') as file:
-        json.dump(data, file, indent=4)
-
-
-
 #sqlite3
 conn = sqlite3.connect('fuwasaba.db')
 c = conn.cursor()
@@ -209,7 +197,6 @@ def stop_py():
 
 #cogs登録
 cogs_list = [
-    'blacklist',
     'clear',
     'country',
     'mcstatus',

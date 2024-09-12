@@ -2,19 +2,12 @@ import discord
 from discord.ext import commands
 from discord import Option
 from discord.ext.commands import MissingAnyRole
-import json
+import configparser
 
-Debug_guild = [1235247721934360577]
+config_ini = configparser.ConfigParser()
+config_ini.read("config.ini", encoding="utf-8")
+GUILD_IDS = config_ini["MAIN"]["GUILD"]
 
-blacklist_file = 'blacklist.json'
-
-def load_data():
-    with open(blacklist_file, 'r') as file:
-        return json.load(file)
-
-def save_data(data):
-    with open(blacklist_file, 'w') as file:
-        json.dump(data, file, indent=4)
 
 class kick(commands.Cog):
 

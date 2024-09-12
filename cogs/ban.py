@@ -2,12 +2,11 @@ import discord
 from discord.ext import commands
 from discord import Option
 from discord.ext.commands import MissingPermissions, MissingAnyRole
-import json
 import configparser
 
 config_ini = configparser.ConfigParser()
 config_ini.read("config.ini", encoding="utf-8")
-GUILD = config_ini["MAIN"]["GUILD"]
+GUILD_IDS = config_ini["MAIN"]["GUILD"]
 
 
 

@@ -3,8 +3,13 @@ from discord.ext import commands
 from discord.commands import SlashCommandGroup
 import psutil
 import datetime
+import configparser
 
-Debug_guild = [1235247721934360577]
+config_ini = configparser.ConfigParser()
+config_ini.read("config.ini", encoding="utf-8")
+GUILD_IDS = config_ini["MAIN"]["GUILD"]
+
+
 
 class tasks(commands.Cog):
 
