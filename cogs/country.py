@@ -174,7 +174,7 @@ class deleteView(discord.ui.View):
 
         country_id2 = str(country_info)
         if country_info2:
-            c.execute(f"""DELETE FROM company WHERE id="{country_info}";""")
+            c.execute(f"""DELETE FROM users WHERE id="{country_info}";""")
             conn.commit()
 
             countrys = await load_country_data()
@@ -234,7 +234,7 @@ class country(commands.Cog):
     async def list(self, ctx: discord.ApplicationContext):
         countrys = await load_country_data()
         if not countrys:
-            await ctx.send("No countrys found.")
+            await ctx.respond("No countrys found.", ephemeral=True)
             return
 
         country_pages = []
