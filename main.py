@@ -11,6 +11,8 @@ import random
 import string
 from dotenv import load_dotenv
 import sqlite3
+from datetime import datetime, timedelta, timezone
+
 
 
 intents = discord.Intents.default()
@@ -184,6 +186,25 @@ async def on_message(message: discord.Message):
                 await message.channel.send(embed=embed)
                 await message.delete()
                 user_dict.pop(user_id)
+
+
+
+@bot.event
+async def on_message_delete(message: discord.Message):
+
+    JST = timezone(timedelta(hours=9))
+
+    channel = message.channel
+    author = message.author
+    content = message.content
+    deleted_time = datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S')
+
+    embed = discord.Embed(title="削除されたメッセージ", description=f"{channel.mention}\n```{content}```", color=0xff0000)
+    embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
+    embed.set_footer(text=f"削除時刻:{deleted_time}")
+
+    del_c = await bot.fetch_channel(1283669113587105895)
+    await del_c.send(embed=embed)
 
 
 
