@@ -2,10 +2,9 @@ import discord
 import discord.ui
 from discord import option
 import os
-from discord.ext import commands, tasks
-from discord.ext.commands import MissingPermissions
+from discord.ext import commands
+from discord.ext.commands import MissingAnyRole
 from time import sleep
-import json
 import configparser
 import random
 import string
@@ -13,6 +12,7 @@ from dotenv import load_dotenv
 import sqlite3
 from datetime import datetime, timedelta, timezone
 import asyncio
+from discord.ext.pages import Paginator, Page
 
 
 
@@ -41,6 +41,9 @@ async def on_ready():
     pass_channel = await bot.fetch_channel("1251824100515512432")
     await channel.send(f"{bot.user}BOT起動完了")
     await pass_channel.send(f"{result}")
+
+    bot.add_view(authView())
+
     while True:
         await bot.change_presence(status=discord.Status.online, activity = discord.Activity(name="ふわ鯖", type=discord.ActivityType.playing))
         await asyncio.sleep(15)
@@ -70,6 +73,10 @@ def save_mcid(user_id, mcid):
 def get_mcid_info(user_id):
     c.execute("SELECT id, mcid FROM register WHERE id = ?", (user_id,))
     return c.fetchone()
+
+def get_all_mcid():
+    c.execute("SELECT id, mcid FROM register")
+    return c.fetchall()
 
 
 
@@ -232,8 +239,44 @@ class authView(discord.ui.View):
 async def auth(ctx: discord.ApplicationContext):
     embed = discord.Embed(title="認証パネル", description="下のボタンを押して認証を開始してください。")
 
+    View = authView()
     await ctx.respond("認証用パネルを設置しました。", ephemeral=True)
-    await ctx.send(embed=embed, view=authView())
+    await ctx.send(embed=embed, view=View)
+
+
+
+@bot.slash_command(name="show", description="mcidを表示します。ユーザーを選択しない場合は一覧表示になります。", guild_ids=GUILD_IDS)
+async def s_mcid(ctx: discord.ApplicationContext, user: discord.Member = None):
+
+
+    if user:
+        user_id = str(user.id)
+        show_mcid = get_mcid_info(user_id)
+
+        if show_mcid:
+
+            embed = discord.Embed(title="MCID検索", color=0x00ff00)
+            embed.add_field(name="", value=f"<@!{user_id}>\nmcid: {show_mcid[1]}")
+
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            await ctx.respond("指定したユーザーはregisterを行っていません。", ephemeral=True)
+    else:
+        mcidlist = get_all_mcid()
+
+        if not mcidlist:
+            await ctx.respond("データベースにデータが存在しません。", ephemeral=True)
+            return
+
+        embeds = []
+        for i in range(0, len(mcidlist), 5):
+            embed = discord.Embed(title="MCIDリスト", color=0x00ff00)
+            for user_id, mcid in mcidlist[i:i+5]:
+                embed.add_field(name="", value=f"<@!{user_id}>\nmcid: {mcid}", inline=False)
+            embeds.append(embed)
+
+        paginator = Paginator(pages=embeds, use_default_buttons=True, timeout=60)
+        await paginator.respond(ctx.interaction, ephemeral=True)
 
 
 
