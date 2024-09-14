@@ -148,21 +148,17 @@ async def on_message(message: discord.Message):
             if mention_text:
                 await replied_message.reply(content=mention_text, embed=embed)
                 await message.delete()
-                owner_dict.pop(user_id)
             else:
                 await replied_message.reply(embed=embed)
                 await message.delete()
-                owner_dict.pop(user_id)
 
         else:
             if mention_text:
                 await message.channel.send(content=mention_text, embed=embed)
                 await message.delete()
-                owner_dict.pop(user_id)
             else:
                 await message.channel.send(embed=embed)
                 await message.delete()
-                owner_dict.pop(user_id)
     elif user_id in user_dict and not message.author.bot:
 
         embed = discord.Embed(description=message.content, color=0x9b59b6)
@@ -186,21 +182,17 @@ async def on_message(message: discord.Message):
             if mention_text:
                 await replied_message.reply(content=mention_text, embed=embed)
                 await message.delete()
-                user_dict.pop(user_id)
             else:
                 await replied_message.reply(embed=embed)
                 await message.delete()
-                user_dict.pop(user_id)
 
         else:
             if mention_text:
                 await message.channel.send(content=mention_text, embed=embed)
                 await message.delete()
-                user_dict.pop(user_id)
             else:
                 await message.channel.send(embed=embed)
                 await message.delete()
-                user_dict.pop(user_id)
 
 
 
