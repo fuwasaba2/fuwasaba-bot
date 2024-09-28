@@ -3,3 +3,4 @@ config.ini
 passord.env
 country.toml
 fuwasaba.db
+cogs/country_test.py
