@@ -60,7 +60,7 @@ class country(commands.Cog):
     country = discord.SlashCommandGroup("country", "admin related commands")
 
     @country.command(name="create", description="建国を行います。", guild_ids=GUILD_IDS)
-    async def create(self, ctx: discord.ApplicationContext, name: discord.Option(str, required=True, description="a")):
+    async def create(self, ctx: discord.ApplicationContext, name: discord.Option(str, required=True, description="a"), image: discord.Attachment):
 
         existing_c = get_country_info(name)
         apply_c = get_user_info(name)
@@ -76,6 +76,7 @@ class country(commands.Cog):
                 embed = discord.Embed(title="建国申請", description="建国申請を行いました。", color=0x38c571)
                 embed.add_field(name="国名", value=f"{name}", inline=False)
                 embed.add_field(name="申請者", value=f"{ctx.author.mention}", inline=False)
+                embed.set_image(url=image.url)
 
                 await ctx.respond(embed=embed)
             else:
