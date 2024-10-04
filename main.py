@@ -302,6 +302,7 @@ def stop_py():
 
 #cogs登録
 cogs_list = [
+    'admin-country',
     'clear',
     'country',
     'mcstatus',

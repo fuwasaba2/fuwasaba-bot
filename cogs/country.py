@@ -24,6 +24,8 @@ c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS country
              (country TEXT PRIMARY KEY, id TEXT )''')
 c.execute('''CREATE TABLE IF NOT EXISTS users
+             (country TEXT PRIMARY KEY, id TEXT, image TEXT )''')
+c.execute('''CREATE TABLE IF NOT EXISTS deletes
              (country TEXT PRIMARY KEY, id TEXT )''')
 
 conn.commit()
@@ -41,15 +43,25 @@ def get_country_info(country):
 
 
 
-def save_user(country, user_id):
+def save_user(country, user_id, image_d):
     with conn:
-        c.execute("INSERT OR IGNORE INTO users (country, id) VALUES (?, ?)", (country, user_id))
-        c.execute("UPDATE users SET id = ? WHERE country = ?", (user_id, country))
+        c.execute("INSERT OR IGNORE INTO users (country, id, image) VALUES (?, ?, ?)", (country, user_id, image_d))
+        c.execute("UPDATE users SET id = ?, image = ? WHERE country = ?", (user_id, image_d, country))
 
 def get_user_info(country):
-    c.execute("SELECT country, id FROM users WHERE country = ?", (country,))
+    c.execute("SELECT country, id, image FROM users WHERE country = ?", (country,))
     return c.fetchone()
 
+
+
+def save_delete(country, user_id):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO deletes (country, id) VALUES (?, ?)", (country, user_id))
+        c.execute("UPDATE deletes SET id = ? WHERE country = ?", (user_id, country))
+
+def get_delete_info(country):
+    c.execute("SELECT country, id FROM deletes WHERE country = ?", (country,))
+    return c.fetchone()
 
 
 class country(commands.Cog):
@@ -60,7 +72,7 @@ class country(commands.Cog):
     country = discord.SlashCommandGroup("country", "admin related commands")
 
     @country.command(name="create", description="建国を行います。", guild_ids=GUILD_IDS)
-    async def create(self, ctx: discord.ApplicationContext, name: discord.Option(str, required=True, description="a"), image: discord.Attachment):
+    async def create(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。"), image: discord.Attachment):
 
         existing_c = get_country_info(name)
         apply_c = get_user_info(name)
@@ -68,10 +80,11 @@ class country(commands.Cog):
         if existing_c:
             await ctx.respond("すでにこの国名の国家が存在しています。", ephemeral=True)
         else:
-            if name != apply_c[0]:
+            if name != apply_c:
                 country = str(name)
                 user_id = str(ctx.author.id)
-                save_user(country, user_id)
+                image_d = str(image.url)
+                save_user(country, user_id, image_d)
 
                 embed = discord.Embed(title="建国申請", description="建国申請を行いました。", color=0x38c571)
                 embed.add_field(name="国名", value=f"{name}", inline=False)
@@ -80,7 +93,25 @@ class country(commands.Cog):
 
                 await ctx.respond(embed=embed)
             else:
-                await ctx.respond(f"現在申請中の国家と国名が同一です。", ephemeral=True)
+                await ctx.respond(f"すでに同じ名称の国家が申請されています。", ephemeral=True)
+
+    @country.command(name="delete", description="国家を解体します。", guild_ids=GUILD_IDS)
+    async def delete(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="解体する国名を入力してください。")):
+        apply_c = get_country_info(name)
+        delete_c = get_delete_info(name)
+
+        if delete_c:
+            await ctx.respond("すでに解体申請済みです。\n申請を取り消す場合は/reportコマンドで運営に報告してください。", ephemeral=True)
+        else:
+            if apply_c:
+                country = str(name)
+                user_id = str(ctx.author.id)
+                save_delete(country, user_id)
+
+                await ctx.respond("国家の解体を申請しました。", ephemeral=True)
+            else:
+                await ctx.respond("国家が存在しません。", ephemeral=True)
+
 
 
     @country.command(name="info", guild_ids=GUILD_IDS)
