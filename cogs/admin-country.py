@@ -89,7 +89,7 @@ class admin_country(commands.Cog):
             c.execute(f"""DELETE FROM users WHERE country="{name}";""")
             conn.commit()
 
-            embed = discord.Embed(title="建国", description=f"以下の国家が建国されました。\n{existing_c[1]}", color=0x38c571)
+            embed = discord.Embed(title="建国", description=f"以下の国家が建国されました。", color=0x38c571)
             embed.add_field(name="国名", value=f"{name}", inline=False)
             embed.add_field(name="国主", value=f"<@!{existing_c[1]}>", inline=False)
             embed.set_image(url=existing_c[2])
