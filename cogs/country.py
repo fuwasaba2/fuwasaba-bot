@@ -17,6 +17,7 @@ GUILD_IDS = config_ini["MAIN"]["GUILD"]
 a_create_c = config_ini["ADMIN_CHANNEL"]["CREATE_C"]
 a_delete_c = config_ini["ADMIN_CHANNEL"]["DELETE_C"]
 p_join_c = config_ini["PUBLIC_CHANNEL"]["JOIN_C"]
+target_channel_id = config_ini["PUBLIC_CHANNEL"]["JOIN_C"]
 
 
 
@@ -31,6 +32,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS users
 c.execute('''CREATE TABLE IF NOT EXISTS deletes
              (country TEXT PRIMARY KEY, id TEXT )''')
 c.execute('''CREATE TABLE IF NOT EXISTS joins
+             (id TEXT PRIMARY KEY, country TEXT )''')
+c.execute('''CREATE TABLE IF NOT EXISTS peoples
              (id TEXT PRIMARY KEY, country TEXT )''')
 
 conn.commit()
@@ -77,6 +80,17 @@ def save_join(user_id, country):
 
 def get_join_info(country):
     c.execute("SELECT id, country FROM joins WHERE id = ?", (country,))
+    return c.fetchone()
+
+
+
+def save_people(user_id, country):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO peoples (id, country) VALUES (?, ?)", (user_id, country))
+        c.execute("UPDATE peoples SET country = ? WHERE id = ?", (country, user_id))
+
+def get_people_info(country):
+    c.execute("SELECT id, country FROM peoples WHERE id = ?", (country,))
     return c.fetchone()
 
 
@@ -160,12 +174,14 @@ class country(commands.Cog):
 
                 embed = discord.Embed(title="入国申請", description="入国申請が届きました。")
                 embed.add_field(name="申請者", value=ctx.author.mention, inline=False)
-                embed.set_footer(text=f"{country_r[1]}")
+                embed.set_author(name=f"{country_r[0]}")
+                embed.set_footer(text=f"{ctx.author.id}")
 
                 await ctx.respond("入国申請を行いました。", ephemeral=True)
 
+                View = authView(self.bot)
                 join_channel = await self.bot.fetch_channel(f"{p_join_c}")
-                await join_channel.send(f"<@!{country_r[1]}>", embed=embed)
+                await join_channel.send(f"<@!{country_r[1]}>", embed=embed, view=View)
         else:
             await ctx.respond("指定した国家は存在しません。", ephemeral=True)
 
@@ -176,6 +192,74 @@ class country(commands.Cog):
 
         c_name = get_user_info(name)
         await ctx.respond(f"{c_name[0]}", ephemeral=True)
+
+class authView(discord.ui.View):
+
+    def __init__(self, bot):
+        super().__init__(timeout=None)
+        self.bot = bot
+
+    @discord.ui.button(label="承認", custom_id="auth-button-yes", style=discord.ButtonStyle.primary)
+    async def yes(self, button: discord.ui.Button, interaction: discord.Interaction):
+        message = interaction.message
+        embed = message.embeds[0]
+        country_c = str(embed.author.name)
+        appli = str(embed.footer.text)
+
+        c_appli = get_join_info(appli)
+        c_ruler = get_country_info(country_c)
+
+        author = str(interaction.user.id)
+        if author == c_ruler[1]:
+
+            country = str(country_c)
+            user_id = str(appli)
+            save_people(user_id, country)
+
+            c.execute(f"""DELETE FROM joins WHERE id="{appli}";""")
+            conn.commit()
+
+            embed = discord.Embed(title="所属", description="国家への所属が完了しました。")
+            embed.add_field(name="加入者", value=f"<@!{appli}>", inline=False)
+            embed.add_field(name="加入先国家", value=f"{country_c}", inline=False)
+
+            await interaction.respond("入国を承認しました。", ephemeral=True)
+            await message.delete()
+
+            channel = await self.bot.fetch_channel(f"{target_channel_id}")
+            await channel.send(embed=embed)
+
+            role = get(interaction.guild.roles, name=country_c)
+            user = await interaction.guild.fetch_member(f"{appli}")
+            await user.add_roles(role)
+        else:
+            await interaction.respond("あなたはこの国の国主ではありません。", ephemeral=True)
+
+    @discord.ui.button(label="拒否", custom_id="auth-button-no", style=discord.ButtonStyle.red)
+    async def no(self, button: discord.ui.Button, interaction: discord.Interaction):
+        message = interaction.message
+        embed = message.embeds[0]
+        country_c = str(embed.author.name)
+        c_ruler = get_country_info(country_c)
+        appli = str(embed.footer.text)
+
+        author = str(interaction.user.id)
+        if author == c_ruler[1]:
+
+            c.execute(f"""DELETE FROM joins WHERE id="{appli}";""")
+            conn.commit()
+
+            await interaction.respond("入国を拒否しました。", ephemeral=True)
+
+            channel = await self.bot.fetch_channel(target_channel_id)
+            await channel.send(f"<@!{appli}>\n入国を拒否されました。")
+            await message.delete()
+        else:
+            await interaction.respond("あなたはこの国の国主ではありません。", ephemeral=True)
+
+
+
+
 
 
 
