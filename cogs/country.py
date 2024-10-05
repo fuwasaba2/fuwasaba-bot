@@ -14,6 +14,9 @@ from discord.utils import get
 config_ini = configparser.ConfigParser()
 config_ini.read("config.ini", encoding="utf-8")
 GUILD_IDS = config_ini["MAIN"]["GUILD"]
+a_create_c = config_ini["ADMIN_CHANNEL"]["CREATE_C"]
+a_delete_c = config_ini["ADMIN_CHANNEL"]["DELETE_C"]
+p_join_c = config_ini["PUBLIC_CHANNEL"]["JOIN_C"]
 
 
 
@@ -27,6 +30,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS users
              (country TEXT PRIMARY KEY, id TEXT, image TEXT )''')
 c.execute('''CREATE TABLE IF NOT EXISTS deletes
              (country TEXT PRIMARY KEY, id TEXT )''')
+c.execute('''CREATE TABLE IF NOT EXISTS joins
+             (id TEXT PRIMARY KEY, country TEXT )''')
 
 conn.commit()
 
@@ -64,6 +69,18 @@ def get_delete_info(country):
     return c.fetchone()
 
 
+
+def save_join(user_id, country):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO joins (id, country) VALUES (?, ?)", (user_id, country))
+        c.execute("UPDATE joins SET country = ? WHERE id = ?", (country, user_id))
+
+def get_join_info(country):
+    c.execute("SELECT id, country FROM joins WHERE id = ?", (country,))
+    return c.fetchone()
+
+
+
 class country(commands.Cog):
 
     def __init__(self, bot):
@@ -86,12 +103,15 @@ class country(commands.Cog):
                 image_d = str(image.url)
                 save_user(country, user_id, image_d)
 
-                embed = discord.Embed(title="建国申請", description="建国申請を行いました。", color=0x38c571)
+                embed = discord.Embed(title="建国申請", description="建国申請が届きました。\n/admin create_applyコマンドで承認できます。", color=0x38c571)
                 embed.add_field(name="国名", value=f"{name}", inline=False)
                 embed.add_field(name="申請者", value=f"{ctx.author.mention}", inline=False)
                 embed.set_image(url=image.url)
 
-                await ctx.respond(embed=embed)
+                await ctx.respond("建国を申請しました。", ephemeral=True)
+
+                apply_channel = await self.bot.fetch_channel(f"{a_create_c}")
+                await apply_channel.send(embed=embed)
             else:
                 await ctx.respond(f"すでに同じ名称の国家が申請されています。", ephemeral=True)
 
@@ -104,13 +124,50 @@ class country(commands.Cog):
             await ctx.respond("すでに解体申請済みです。\n申請を取り消す場合は/reportコマンドで運営に報告してください。", ephemeral=True)
         else:
             if apply_c:
-                country = str(name)
-                user_id = str(ctx.author.id)
-                save_delete(country, user_id)
+                if str(apply_c[1]) == str(ctx.author.id):
+                    country = str(name)
+                    user_id = str(ctx.author.id)
+                    save_delete(country, user_id)
 
-                await ctx.respond("国家の解体を申請しました。", ephemeral=True)
+                    embed = discord.Embed(title="解体申請", description="解体申請が届きました。\n/admin delete_applyコマンドで承認できます。", color=0x38c571)
+                    embed.add_field(name="国名", value=name, inline=False)
+                    embed.add_field(name="国主", value=ctx.author.mention, inline=False)
+
+                    delete_channel = await self.bot.fetch_channel(f"{a_delete_c}")
+                    await delete_channel.send(embed=embed)
+
+                    await ctx.respond("国家の解体を申請しました。", ephemeral=True)
+                else:
+                    await ctx.respond("解体は国主のみ申請可能です。", ephemeral=True)
             else:
                 await ctx.respond("国家が存在しません。", ephemeral=True)
+
+    @country.command(name="join", description="入国申請を行います。", guild_ids=GUILD_IDS)
+    async def join(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。")):
+        user_id = str(ctx.author.id)
+
+        user_info = get_join_info(user_id)
+        join_c = get_country_info(name)
+        country_r = get_country_info(name)
+
+        if join_c:
+            if user_info:
+                await ctx.respond(f"あなたはすでに{user_info[1]}に入国申請を行っています。", ephemeral=True)
+            else:
+                user_id = str(ctx.author.id)
+                country = str(name)
+                save_join(user_id, country)
+
+                embed = discord.Embed(title="入国申請", description="入国申請が届きました。")
+                embed.add_field(name="申請者", value=ctx.author.mention, inline=False)
+                embed.set_footer(text=f"{country_r[1]}")
+
+                await ctx.respond("入国申請を行いました。", ephemeral=True)
+
+                join_channel = await self.bot.fetch_channel(f"{p_join_c}")
+                await join_channel.send(f"<@!{country_r[1]}>", embed=embed)
+        else:
+            await ctx.respond("指定した国家は存在しません。", ephemeral=True)
 
 
 
@@ -118,7 +175,7 @@ class country(commands.Cog):
     async def info(self, ctx:discord.ApplicationContext, name: discord.Option(str)):
 
         c_name = get_user_info(name)
-        await ctx.respond(f"{c_name[1]}", ephemeral=True)
+        await ctx.respond(f"{c_name[0]}", ephemeral=True)
 
 
 

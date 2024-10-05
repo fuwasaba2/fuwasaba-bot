@@ -14,6 +14,8 @@ from discord.utils import get
 config_ini = configparser.ConfigParser()
 config_ini.read("config.ini", encoding="utf-8")
 GUILD_IDS = config_ini["MAIN"]["GUILD"]
+p_create_c = config_ini["PUBLIC_CHANNEL"]["CREATE_C"]
+p_delete_c = config_ini["PUBLIC_CHANNEL"]["DELETE_C"]
 
 
 
@@ -72,6 +74,7 @@ class admin_country(commands.Cog):
     admin = discord.SlashCommandGroup("admin", "admin related commands")
 
     @admin.command(name="create_apply", description="建国を承認します。", guild_ids=GUILD_IDS)
+    @commands.has_any_role(1282384396791320665)
     async def create(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。")):
 
         existing_c = get_user_info(name)
@@ -81,19 +84,29 @@ class admin_country(commands.Cog):
             user_id = str(existing_c[1])
             save_country(country, user_id)
 
+            ruler_id = str(existing_c[1])
+
             c.execute(f"""DELETE FROM users WHERE country="{name}";""")
             conn.commit()
 
-            embed = discord.Embed(title="建国", description="以下の国家が建国されました。", color=0x38c571)
+            embed = discord.Embed(title="建国", description=f"以下の国家が建国されました。\n{existing_c[1]}", color=0x38c571)
             embed.add_field(name="国名", value=f"{name}", inline=False)
             embed.add_field(name="国主", value=f"<@!{existing_c[1]}>", inline=False)
             embed.set_image(url=existing_c[2])
 
             await ctx.respond(embed=embed)
+            role = await ctx.guild.create_role(name=name, mentionable=True)
+
+            ruler = await ctx.guild.fetch_member(ruler_id)
+            await ruler.add_roles(role)
+
+            channel = await self.bot.fetch_channel(f"{p_create_c}")
+            await channel.send(embed=embed)
         else:
             await ctx.respond(f"申請中の国家に指定された国名がありません。", ephemeral=True)
 
     @admin.command(name="delete_apply", description="国家の解体を承認します。", guild_ids=GUILD_IDS)
+    @commands.has_any_role(1282384396791320665)
     async def delete_c(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。")):
         name = str(name)
 
@@ -109,6 +122,9 @@ class admin_country(commands.Cog):
             embed.add_field(name="国名", value=name, inline=False)
 
             await ctx.respond(embed=embed)
+
+            channel = await self.bot.fetch_channel(f"{p_delete_c}")
+            await channel.send(embed=embed)
         else:
             await ctx.respond("解体申請中の国家に指定された国名がありません。", ephemeral=True)
 
