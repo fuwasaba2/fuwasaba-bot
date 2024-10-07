@@ -13,6 +13,7 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 import asyncio
 from discord.ext.pages import Paginator, Page
+from win11toast import toast
 
 
 
@@ -41,6 +42,7 @@ async def on_ready():
     pass_channel = await bot.fetch_channel("1251824100515512432")
     await channel.send(f"{bot.user}BOT起動完了")
     await pass_channel.send(f"{result}")
+    toast("Hello", f"{bot.user} が起動しました。")
 
     bot.add_view(authView())
 
