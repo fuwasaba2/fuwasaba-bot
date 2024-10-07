@@ -96,6 +96,17 @@ def get_people_info(country):
 
 
 
+class join(commands.Cog):
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.bot.add_view(joinView(self.bot))
+
+
+
 class country(commands.Cog):
 
     def __init__(self, bot):
@@ -189,16 +200,61 @@ class country(commands.Cog):
 
                     await ctx.respond("入国申請を行いました。", ephemeral=True)
 
-                    View = authView(self.bot)
+                    View = joinView(self.bot)
                     join_channel = await self.bot.fetch_channel(f"{p_join_c}")
                     await join_channel.send(f"<@!{country_r[1]}>", embed=embed, view=View)
             else:
                 await ctx.respond("指定した国家は存在しません。", ephemeral=True)
 
+    @country.command(name="leave", description="国家から脱退します。", guild_ids=GUILD_IDS)
+    async def leave(self, ctx):
+
+        user_id = str(ctx.user.id)
+        country = get_people_info(user_id)
+
+
+        if country:
+            ruler = get_country_info(country[1])
+            if user_id != ruler[1]:
+                await ctx.respond(f"{country[1]}から脱退しました。", ephemeral=True)
+                embed = discord.Embed(title="国家からの脱退", description=f"以下の内容で{ctx.user.mention}が国家から脱退しました。")
+                embed.add_field(name="脱退者", value=ctx.user.mention, inline=False)
+                embed.add_field(name="脱退元国家", value=country[1], inline=False)
+
+                role = get(ctx.guild.roles, name=country[1])
+                user = await ctx.guild.fetch_member(f"{user_id}")
+                await user.remove_roles(role)
+
+                c.execute(f"""DELETE FROM peoples WHERE id="{user_id}";""")
+                conn.commit()
+
+                channel = await ctx.guild.fetch_channel(f"{p_join_c}")
+                await channel.send(embed=embed)
+            else:
+                await ctx.respond("あなたは国主のため脱退できません。", ephemeral=True)
+        else:
+            await ctx.respond("あなたは国家に所属していません。", ephemeral=True)
+
+    @country.command(name="cancel", description="所属申請をキャンセルします。", guild_ids=GUILD_IDS)
+    async def cancel(self, ctx: discord.ApplicationContext):
+
+        user_id = str(ctx.author.id)
+        join_info = get_join_info(user_id)
+
+        if join_info:
+
+            c.execute(f"""DELETE FROM joins WHERE id="{user_id}";""")
+            conn.commit()
+
+            await ctx.respond("所属申請をキャンセルしました。", ephemeral=True)
+        else:
+            await ctx.respond("所属申請を出していません。", ephemeral=True)
 
 
 
-class authView(discord.ui.View):
+
+
+class joinView(discord.ui.View):
 
     def __init__(self, bot):
         super().__init__(timeout=None)
@@ -216,27 +272,30 @@ class authView(discord.ui.View):
 
         author = str(interaction.user.id)
         if author == c_ruler[1]:
+            if c_appli:
+                country = str(country_c)
+                user_id = str(appli)
+                save_people(user_id, country)
 
-            country = str(country_c)
-            user_id = str(appli)
-            save_people(user_id, country)
+                c.execute(f"""DELETE FROM joins WHERE id="{appli}";""")
+                conn.commit()
 
-            c.execute(f"""DELETE FROM joins WHERE id="{appli}";""")
-            conn.commit()
+                embed = discord.Embed(title="所属", description="国家への所属が完了しました。")
+                embed.add_field(name="加入者", value=f"<@!{appli}>", inline=False)
+                embed.add_field(name="加入先国家", value=f"{country_c}", inline=False)
 
-            embed = discord.Embed(title="所属", description="国家への所属が完了しました。")
-            embed.add_field(name="加入者", value=f"<@!{appli}>", inline=False)
-            embed.add_field(name="加入先国家", value=f"{country_c}", inline=False)
+                await interaction.respond("入国を承認しました。", ephemeral=True)
+                await message.delete()
 
-            await interaction.respond("入国を承認しました。", ephemeral=True)
-            await message.delete()
+                channel = await self.bot.fetch_channel(f"{target_channel_id}")
+                await channel.send(embed=embed)
 
-            channel = await self.bot.fetch_channel(f"{target_channel_id}")
-            await channel.send(embed=embed)
-
-            role = get(interaction.guild.roles, name=country_c)
-            user = await interaction.guild.fetch_member(f"{appli}")
-            await user.add_roles(role)
+                role = get(interaction.guild.roles, name=country_c)
+                user = await interaction.guild.fetch_member(f"{appli}")
+                await user.add_roles(role)
+            else:
+                await interaction.respond("このユーザーはすでに所属申請をキャンセルしました。", ephemeral=True)
+                await message.delete()
         else:
             await interaction.respond("あなたはこの国の国主ではありません。", ephemeral=True)
 
@@ -247,18 +306,22 @@ class authView(discord.ui.View):
         country_c = str(embed.author.name)
         c_ruler = get_country_info(country_c)
         appli = str(embed.footer.text)
+        c_appli = get_join_info(appli)
 
         author = str(interaction.user.id)
         if author == c_ruler[1]:
 
-            c.execute(f"""DELETE FROM joins WHERE id="{appli}";""")
-            conn.commit()
+            if c_appli:
+                c.execute(f"""DELETE FROM joins WHERE id="{appli}";""")
+                conn.commit()
 
-            await interaction.respond("入国を拒否しました。", ephemeral=True)
+                await interaction.respond("入国を拒否しました。", ephemeral=True)
 
-            channel = await self.bot.fetch_channel(target_channel_id)
-            await channel.send(f"<@!{appli}>\n入国を拒否されました。")
-            await message.delete()
+                channel = await self.bot.fetch_channel(target_channel_id)
+                await channel.send(f"<@!{appli}>\n入国を拒否されました。")
+                await message.delete()
+            else:
+                await interaction.respond("このユーザーはすでに所属申請をキャンセルしました。", ephemeral=True)
         else:
             await interaction.respond("あなたはこの国の国主ではありません。", ephemeral=True)
 
@@ -270,3 +333,4 @@ class authView(discord.ui.View):
 
 def setup(bot):
     bot.add_cog(country(bot))
+    bot.add_cog(join(bot))
