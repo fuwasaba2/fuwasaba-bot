@@ -8,6 +8,7 @@ import aiofiles
 import os
 from discord.ext.pages import Paginator, Page
 from discord.utils import get
+import re
 
 
 
@@ -105,29 +106,34 @@ class country(commands.Cog):
     @country.command(name="create", description="建国を行います。", guild_ids=GUILD_IDS)
     async def create(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。"), image: discord.Attachment):
 
+        user_id = str(ctx.author.id)
         existing_c = get_country_info(name)
         apply_c = get_user_info(name)
+        people = get_people_info(user_id)
 
-        if existing_c:
-            await ctx.respond("すでにこの国名の国家が存在しています。", ephemeral=True)
+        if people:
+            await ctx.respond("あなたはすでに国家に所属しています。", ephemeral=True)
         else:
-            if name != apply_c:
-                country = str(name)
-                user_id = str(ctx.author.id)
-                image_d = str(image.url)
-                save_user(country, user_id, image_d)
-
-                embed = discord.Embed(title="建国申請", description="建国申請が届きました。\n/admin create_applyコマンドで承認できます。", color=0x38c571)
-                embed.add_field(name="国名", value=f"{name}", inline=False)
-                embed.add_field(name="申請者", value=f"{ctx.author.mention}", inline=False)
-                embed.set_image(url=image.url)
-
-                await ctx.respond("建国を申請しました。", ephemeral=True)
-
-                apply_channel = await self.bot.fetch_channel(f"{a_create_c}")
-                await apply_channel.send(embed=embed)
+            if existing_c:
+                await ctx.respond("すでにこの国名の国家が存在しています。", ephemeral=True)
             else:
-                await ctx.respond(f"すでに同じ名称の国家が申請されています。", ephemeral=True)
+                if name != apply_c:
+                    country = str(name)
+                    user_id = str(ctx.author.id)
+                    image_d = str(image.url)
+                    save_user(country, user_id, image_d)
+
+                    embed = discord.Embed(title="建国申請", description="建国申請が届きました。\n/admin create_applyコマンドで承認できます。", color=0x38c571)
+                    embed.add_field(name="国名", value=f"{name}", inline=False)
+                    embed.add_field(name="申請者", value=f"{ctx.author.mention}", inline=False)
+                    embed.set_image(url=image.url)
+
+                    await ctx.respond("建国を申請しました。", ephemeral=True)
+
+                    apply_channel = await self.bot.fetch_channel(f"{a_create_c}")
+                    await apply_channel.send(embed=embed)
+                else:
+                    await ctx.respond(f"すでに同じ名称の国家が申請されています。", ephemeral=True)
 
     @country.command(name="delete", description="国家を解体します。", guild_ids=GUILD_IDS)
     async def delete(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="解体する国名を入力してください。")):
@@ -163,35 +169,34 @@ class country(commands.Cog):
         user_info = get_join_info(user_id)
         join_c = get_country_info(name)
         country_r = get_country_info(name)
+        people = get_people_info(user_id)
 
-        if join_c:
-            if user_info:
-                await ctx.respond(f"あなたはすでに{user_info[1]}に入国申請を行っています。", ephemeral=True)
-            else:
-                user_id = str(ctx.author.id)
-                country = str(name)
-                save_join(user_id, country)
-
-                embed = discord.Embed(title="入国申請", description="入国申請が届きました。")
-                embed.add_field(name="申請者", value=ctx.author.mention, inline=False)
-                embed.set_author(name=f"{country_r[0]}")
-                embed.set_footer(text=f"{ctx.author.id}")
-
-                await ctx.respond("入国申請を行いました。", ephemeral=True)
-
-                View = authView(self.bot)
-                join_channel = await self.bot.fetch_channel(f"{p_join_c}")
-                await join_channel.send(f"<@!{country_r[1]}>", embed=embed, view=View)
+        if people:
+            await ctx.respond("あなたはすでに国家に所属しています。", ephemeral=True)
         else:
-            await ctx.respond("指定した国家は存在しません。", ephemeral=True)
+            if join_c:
+                if user_info:
+                    await ctx.respond(f"あなたはすでに{user_info[1]}に入国申請を行っています。", ephemeral=True)
+                else:
+                    user_id = str(ctx.author.id)
+                    country = str(name)
+                    save_join(user_id, country)
+
+                    embed = discord.Embed(title="入国申請", description="入国申請が届きました。")
+                    embed.add_field(name="申請者", value=ctx.author.mention, inline=False)
+                    embed.set_author(name=f"{country_r[0]}")
+                    embed.set_footer(text=f"{ctx.author.id}")
+
+                    await ctx.respond("入国申請を行いました。", ephemeral=True)
+
+                    View = authView(self.bot)
+                    join_channel = await self.bot.fetch_channel(f"{p_join_c}")
+                    await join_channel.send(f"<@!{country_r[1]}>", embed=embed, view=View)
+            else:
+                await ctx.respond("指定した国家は存在しません。", ephemeral=True)
 
 
 
-    @country.command(name="info", guild_ids=GUILD_IDS)
-    async def info(self, ctx:discord.ApplicationContext, name: discord.Option(str)):
-
-        c_name = get_user_info(name)
-        await ctx.respond(f"{c_name[0]}", ephemeral=True)
 
 class authView(discord.ui.View):
 

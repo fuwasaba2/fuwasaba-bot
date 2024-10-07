@@ -29,6 +29,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS users
              (country TEXT PRIMARY KEY, id TEXT, image TEXT )''')
 c.execute('''CREATE TABLE IF NOT EXISTS deletes
              (country TEXT PRIMARY KEY, id TEXT )''')
+c.execute('''CREATE TABLE IF NOT EXISTS peoples
+             (id TEXT PRIMARY KEY, country TEXT )''')
 
 conn.commit()
 
@@ -66,6 +68,17 @@ def get_delete_info(country):
     return c.fetchone()
 
 
+
+def save_people(user_id, country):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO peoples (id, country) VALUES (?, ?)", (user_id, country))
+        c.execute("UPDATE peoples SET country = ? WHERE id = ?", (country, user_id))
+
+def get_people_info(country):
+    c.execute("SELECT id, country FROM peoples WHERE id = ?", (country,))
+    return c.fetchone()
+
+
 class admin_country(commands.Cog):
 
     def __init__(self, bot):
@@ -83,6 +96,7 @@ class admin_country(commands.Cog):
             country = str(name)
             user_id = str(existing_c[1])
             save_country(country, user_id)
+            save_people(user_id, country)
 
             ruler_id = str(existing_c[1])
 
