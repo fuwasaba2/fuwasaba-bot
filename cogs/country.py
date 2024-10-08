@@ -250,6 +250,37 @@ class country(commands.Cog):
         else:
             await ctx.respond("所属申請を出していません。", ephemeral=True)
 
+    @country.command(name="kick", description="国民を追放します。", guild_ids=GUILD_IDS)
+    async def kick(self, ctx: discord.ApplicationContext, user: discord.Option(str, description="ユーザーIDかメンションで指定できます。")):
+
+
+        target = re.sub("\D", "", str(user))
+        try:
+            user_info = await self.bot.fetch_user(target)
+            user_id = str(user_info.id)
+            country = get_people_info(str(user_id))
+            ruler = str(ctx.author.id)
+            ruler1 = get_country_info(country[1])
+
+            if  ruler == ruler1[1]:
+                c.execute(f"""DELETE FROM peoples WHERE id="{user_id}";""")
+                conn.commit()
+
+                await ctx.respond(f"{user_info.mention}を追放しました。", ephemeral=True)
+
+                embed = discord.Embed(title="追放", description="以下の内容で国民を追放しました。")
+                embed.add_field(name="追放者", value=user_info.mention, inline=False)
+                embed.add_field(name="追放元国家", value=country[1], inline=False)
+                channel = await self.bot.fetch_channel(f"{p_join_c}")
+                await channel.send(embed=embed)
+            else:
+                await ctx.respond("あなたは国主ではありません。", ephemeral=True)
+        except:
+            await ctx.respond("ユーザーを取得できませんでした。", ephemeral=True)
+
+
+
+
 
 
 
