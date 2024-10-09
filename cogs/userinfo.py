@@ -73,9 +73,8 @@ class userinfo_c(commands.Cog):
         embed.add_field(name="表示名", value=user.display_name,inline=True)
         embed.add_field(name="ユーザーID", value=user.id,inline=True)
         embed.add_field(name="メンション", value=user.mention, inline=True)
-        embed.add_field(name="アカウント作成日", value=user.created_at)
-        embed.add_field(name="MCID", value=mcid[1], inline=False)
-        embed.set_footer(text="Userinfoサービス")
+        embed.add_field(name="アカウント作成日", value=user.created_at, inline=True)
+        embed.add_field(name="MCID", value=mcid[1], inline=True)
         await ctx.respond(embed=embed, ephemeral=True)
 
 def setup(bot):
