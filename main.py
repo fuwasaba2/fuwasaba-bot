@@ -19,10 +19,12 @@ from win11toast import toast
 
 intents = discord.Intents.default()
 intents.message_content = (True)
+intents.members = (True)
 
 config_ini = configparser.ConfigParser()
 config_ini.read("config.ini", encoding="utf-8")
 TOKEN = config_ini["MAIN"]["TOKEN"]
+MEMBER_JOIN = config_ini["MAIN"]["MEMBER_JOIN"]
 
 bot = discord.Bot(intents=intents)
 bot.webhooks = {}
@@ -292,6 +294,15 @@ async def on_message_delete(message: discord.Message):
     del_c = await bot.fetch_channel(1283669113587105895)
     await del_c.send(embed=embed)
 
+
+
+@bot.event
+async def on_member_join(member):
+
+    embed = discord.Embed(title="メンバー参加", description=f"{member.mention}さん、ようこそ\n")
+
+    channel = await bot.fetch_channel(f"{MEMBER_JOIN}")
+    await channel.send(embed=embed)
 
 
 #stop
