@@ -25,7 +25,7 @@ class dm(commands.Cog):
 
             owner = await self.bot.fetch_user(827053187919511603)
             embed = discord.Embed(title="ふわ鯖サポート", description="ここではふわ鯖運営に機能などの提案やルール違反の報告などを行うことが可能です。\n以下のボタンを押すことで対応したサポートを開始します。\n \n1:運営への質問・提案\n2:ルール違反などの通報\n3:BOTの機能提案・バグ報告")
-            embed.set_author(name="owner かちゅーしゃ", icon_url=owner.avatar.url)
+            embed.set_author(name="SUPPORTER かちゅーしゃ", icon_url=owner.avatar.url)
             embed.set_footer(text="ふわ鯖サポート")
             View = dm_button(self.bot)
             await message.channel.send(embed=embed, view=View)
