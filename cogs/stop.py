@@ -17,14 +17,23 @@ class stop(commands.Cog):
         self.bot = bot
 
     @discord.slash_command(name="stop", description="BOTを停止します。")
-    @commands.is_owner()
     async def stop(self, ctx):
-        await ctx.respond("BOTを停止します。", ephemeral=True)
-        print("BOTを停止しました。\n------")
-        await self.bot.close()
-        await asyncio.sleep(1)
-        loop = asyncio.get_event_loop()
-        loop.stop
+        if ctx.author.id == 822458692473323560:
+            await ctx.respond("BOTを停止します。", ephemeral=True)
+            print("BOTを停止しました。\n------")
+            await self.bot.close()
+            await asyncio.sleep(1)
+            loop = asyncio.get_event_loop()
+            loop.stop
+        elif ctx.author.id == 827053187919511603:
+            await ctx.respond("BOTを停止します。", ephemeral=True)
+            print("BOTを停止しました。\n------")
+            await self.bot.close()
+            await asyncio.sleep(1)
+            loop = asyncio.get_event_loop()
+            loop.stop
+        else:
+            await ctx.respond("権限がありません。", ephemeral=True)
 
 
 def setup(bot):
