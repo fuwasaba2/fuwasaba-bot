@@ -318,6 +318,7 @@ cogs_list = [
     'admin-country',
     'clear',
     'country',
+    'dm',
     'mcstatus',
     'ping',
     'serverinfo',
