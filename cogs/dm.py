@@ -41,24 +41,32 @@ class dm_button(discord.ui.View):
     @discord.ui.button(label="1", custom_id="dm-1-button", style=discord.ButtonStyle.primary)
     async def dm1(self, button: discord.ui.Button, interaction):
 
+        owner = await self.bot.fetch_user(827053187919511603)
         embed = discord.Embed(title="運営への質問・提案",
                               description="ここでは運営にサーバーに関する質問や提案を行うことができます。\n下のボタンを押すことで出現するフォームに入力して送信可能です。")
+        embed.set_author(name="SUPPORTER かちゅーしゃ", icon_url=owner.avatar.url)
+
         View = dm_button1(self.bot)
         await interaction.response.send_message(embed=embed, view=View)
 
     @discord.ui.button(label="2", custom_id="dm-2-button", style=discord.ButtonStyle.primary)
     async def dm2(self, button: discord.ui.Button, interaction):
 
+        owner = await self.bot.fetch_user(827053187919511603)
         embed = discord.Embed(title="ルール違反などの通報",
                               description="ここではルール違反などの通報を行うことができます。\n下のボタンを押すことで出現するフォームに入力して送信可能です。")
+        embed.set_author(name="SUPPORTER かちゅーしゃ", icon_url=owner.avatar.url)
+
         View = dm_button2(self.bot)
         await interaction.response.send_message(embed=embed, view=View)
 
     @discord.ui.button(label="3", custom_id="dm-3-button", style=discord.ButtonStyle.primary)
     async def dm3(self, button: discord.ui.Button, interaction):
 
+        owner = await self.bot.fetch_user(827053187919511603)
         embed = discord.Embed(title="BOTの機能提案・バグ報告",
                               description="ここではBOT管理者にBOTの機能提案やバグの報告を行うことができます。\n下のボタンを押すことで出現するフォームに入力して送信可能です。")
+        embed.set_author(name="SUPPORTER かちゅーしゃ", icon_url=owner.avatar.url)
         View = dm_button3(self.bot)
         await interaction.response.send_message(embed=embed, view=View)
 
@@ -90,7 +98,10 @@ class button1Modal(discord.ui.Modal):
         embed = discord.Embed(title="質問・提案", description=f"{self.children[0].value}")
         await channel.send(embed=embed)
 
+        owner = await self.bot.fetch_user(827053187919511603)
         embed = discord.Embed(title="送信完了", description=f"以下の内容で送信しました。\n{self.children[0].value}", color=0x00ff00)
+        embed.set_author(name="SUPPORTER かちゅーしゃ", icon_url=owner.avatar.url)
+
         await interaction.response.send_message(embed=embed)
 
 
@@ -122,7 +133,10 @@ class button2Modal(discord.ui.Modal):
         embed = discord.Embed(title="ルール違反などの通報", description=f"{self.children[0].value}")
         await channel.send(embed=embed)
 
+        owner = await self.bot.fetch_user(827053187919511603)
         embed = discord.Embed(title="送信完了", description=f"以下の内容で送信しました。\n{self.children[0].value}", color=0x00ff00)
+        embed.set_author(name="SUPPORTER かちゅーしゃ", icon_url=owner.avatar.url)
+
         await interaction.response.send_message(embed=embed)
 
 
@@ -154,7 +168,10 @@ class button3Modal(discord.ui.Modal):
         embed = discord.Embed(title="BOTのバグ報告・機能提案", description=f"{self.children[0].value}")
         await channel.send(embed=embed)
 
+        owner = await self.bot.fetch_user(827053187919511603)
         embed = discord.Embed(title="送信完了", description=f"以下の内容で送信しました。\n{self.children[0].value}", color=0x00ff00)
+        embed.set_author(name="SUPPORTER かちゅーしゃ", icon_url=owner.avatar.url)
+
         await interaction.response.send_message(embed=embed)
 
 
