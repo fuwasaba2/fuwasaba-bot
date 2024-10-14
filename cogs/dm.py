@@ -150,7 +150,7 @@ class dm_button3(discord.ui.View):
     @discord.ui.button(label="入力", custom_id="dm-3-button-form", style=discord.ButtonStyle.green)
     async def dm1(self, button: discord.ui.Button, interaction):
 
-        modal = button1Modal(self.bot, title="BOTのバグ報告・機能提案")
+        modal = button3Modal(self.bot, title="BOTのバグ報告・機能提案")
         await interaction.response.send_modal(modal)
 
 class button3Modal(discord.ui.Modal):
