@@ -31,6 +31,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS deletes
              (country TEXT PRIMARY KEY, id TEXT )''')
 c.execute('''CREATE TABLE IF NOT EXISTS peoples
              (id TEXT PRIMARY KEY, country TEXT )''')
+c.execute('''CREATE TABLE IF NOT EXISTS register
+             (id TEXT PRIMARY KEY, mcid TEXT )''')
 
 conn.commit()
 
@@ -77,6 +79,13 @@ def save_people(user_id, country):
 def get_people_info(country):
     c.execute("SELECT id, country FROM peoples WHERE id = ?", (country,))
     return c.fetchone()
+
+
+
+def save_mcid(user_id, mcid):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO register (id, mcid) VALUES (?, ?)", (user_id, mcid))
+        c.execute("UPDATE register SET mcid = ? WHERE id = ?", (mcid, user_id))
 
 
 class admin_country(commands.Cog):
@@ -142,6 +151,33 @@ class admin_country(commands.Cog):
         else:
             await ctx.respond("解体申請中の国家に指定された国名がありません。", ephemeral=True)
 
+    @admin.command(name="reject", description="建国を拒否します。", guild_ids=GUILD_IDS)
+    @commands.has_any_role(1282384396791320665)
+    async def reject_c(self, ctx: discord.ApplicationContext, name: discord.Option(str, description="国名を入力してください。")):
+
+        existing_c = get_user_info(name)
+
+        if existing_c:
+
+            ruler_id = str(existing_c[1])
+
+            c.execute(f"""DELETE FROM users WHERE country="{name}";""")
+            conn.commit()
+
+            ruler = await ctx.guild.fetch_member(ruler_id)
+            await ruler.send("建国が拒否されました。\n再申請などを行ってください。")
+        else:
+            await ctx.respond(f"申請中の国家に指定された国名がありません。", ephemeral=True)
+
+    @admin.command(name="regiter", desciption="指定したユーザーのMCIDを登録します。", guild_ids=GUILD_IDS)
+    @commands.has_any_role(1282384396791320664, 1282384396791320665)
+    async def register(self, ctx: discord.ApplicationContext, user: discord.Member, mcid: discord.Option(str, description="MCIDを入力してください。")):
+
+        user_id = str(user.id)
+        mcid = str(mcid)
+        save_mcid(user_id, mcid)
+
+        await ctx.respond(f"{user.mention}に{mcid}を登録しました。", ephemeral=True)
 
 
 
